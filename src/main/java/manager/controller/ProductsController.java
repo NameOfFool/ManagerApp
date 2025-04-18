@@ -1,9 +1,9 @@
-package manager_app.controller;
+package manager.controller;
 
 import lombok.RequiredArgsConstructor;
-import manager_app.dto.CreateProductDto;
-import manager_app.entity.Product;
-import manager_app.service.ProductService;
+import manager.client.ProductsRestClient;
+import manager.dto.CreateProductDto;
+import manager.entity.Product;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping(path = "catalog/products")
 public class ProductsController {
 
-    private final ProductService productService;
+    private final ProductsRestClient productsRestClient;
 
     @GetMapping(value = "list")
     public String getProductsList(Model model) {
-        model.addAttribute("products", this.productService.findAllProducts());
+        model.addAttribute("products", this.productsRestClient.findAllProducts());
         return "catalog/products/list";
     }
 
@@ -30,7 +30,7 @@ public class ProductsController {
 
     @PostMapping("create")
     public String createProduct(CreateProductDto payload) {
-        Product p = this.productService.createProduct(payload.title(), payload.details());
-        return "redirect:/catalog/products/%d".formatted(p.getId());
+        Product p = this.productsRestClient.createProduct(payload.title(), payload.details());
+        return "redirect:/catalog/products/%d".formatted(p.id());
     }
 }

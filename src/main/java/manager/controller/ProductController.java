@@ -1,11 +1,10 @@
-package manager_app.controller;
+package manager.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import manager_app.dto.UpdateProductDto;
-import manager_app.entity.Product;
-import manager_app.service.ProductService;
+import manager.client.ProductsRestClient;
+import manager.dto.UpdateProductDto;
+import manager.entity.Product;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -19,13 +18,13 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 @RequestMapping(path = "catalog/products/{productId:\\d+}")
 public class ProductController {
-    private final ProductService productService;
+    private final ProductsRestClient productsRestClient;
 
     private final MessageSource messageSource;
 
     @ModelAttribute("product")
     public Product product(@PathVariable("productId") long productId) {
-        return this.productService.getProduct(productId)
+        return this.productsRestClient.findProduct(productId)
                 .orElseThrow(() -> new NoSuchElementException("catalog.errors.product.not_found"));
     }
 
@@ -41,20 +40,21 @@ public class ProductController {
 
     @PostMapping("edit")
     public String updateProduct(@ModelAttribute("product") Product product, UpdateProductDto payload) {
-        this.productService.updateProduct(product.getId(), payload.title(), payload.details());
-        return "redirect:/catalog/products/%d".formatted(product.getId());
+        this.productsRestClient.updateProduct(product.id(), payload.title(), payload.details());
+        return "redirect:/catalog/products/%d".formatted(product.id());
     }
 
     @PostMapping("delete")
-    public String deleteProduct(@ModelAttribute("product") Product product){
-        this.productService.deleteProduct(product.getId());
+    public String deleteProduct(@ModelAttribute("product") Product product) {
+        this.productsRestClient.deleteProduct(product.id());
         return "redirect:/catalog/products/list";
     }
+
     @ExceptionHandler(NoSuchElementException.class)
     public String handleNoSuchElementException(NoSuchElementException exception,
                                                Model model,
                                                HttpServletResponse response,
-                                               Locale locale){
+                                               Locale locale) {
         response.setStatus(HttpStatus.NOT_FOUND.value());
         model.addAttribute("error", this.messageSource.getMessage(exception.getMessage(),
                 new Object[0],
